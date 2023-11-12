@@ -20,8 +20,6 @@
 package net.draycia.carbon.common.command.commands;
 
 import cloud.commandframework.CommandManager;
-import cloud.commandframework.arguments.standard.UUIDArgument;
-import cloud.commandframework.minecraft.extras.MinecraftExtrasMetaKeys;
 import cloud.commandframework.minecraft.extras.RichDescription;
 import com.google.inject.Inject;
 import net.draycia.carbon.api.CarbonServer;
@@ -36,6 +34,9 @@ import net.draycia.carbon.common.messages.CarbonMessages;
 import net.kyori.adventure.key.Key;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.framework.qual.DefaultQualifier;
+
+import static cloud.commandframework.CommandDescription.commandDescription;
+import static cloud.commandframework.arguments.standard.UUIDParser.uuidParser;
 
 @DefaultQualifier(NonNull.class)
 public final class UnmuteCommand extends CarbonCommand {
@@ -74,18 +75,18 @@ public final class UnmuteCommand extends CarbonCommand {
     @Override
     public void init() {
         final var command = this.commandManager.commandBuilder(this.commandSettings().name(), this.commandSettings().aliases())
-            .argument(this.argumentFactory.carbonPlayer("player").asOptional(),
+            .optional("player", this.argumentFactory.carbonPlayer(),
                 RichDescription.of(this.carbonMessages.commandUnmuteArgumentPlayer()))
             .flag(this.commandManager.flagBuilder("uuid")
                 .withAliases("u")
                 .withDescription(RichDescription.of(this.carbonMessages.commandUnmuteArgumentUUID()))
-                .withArgument(UUIDArgument.optional("uuid"))
+                .withComponent(uuidParser())
             )
             .permission("carbon.mute.unmute")
             .senderType(PlayerCommander.class)
-            .meta(MinecraftExtrasMetaKeys.DESCRIPTION, this.carbonMessages.commandUnmuteDescription())
+            .commandDescription(commandDescription(RichDescription.of(this.carbonMessages.commandUnmuteDescription())))
             .handler(handler -> {
-                final CarbonPlayer sender = ((PlayerCommander) handler.getSender()).carbonPlayer();
+                final CarbonPlayer sender = handler.getSender().carbonPlayer();
                 final CarbonPlayer target;
 
                 if (handler.contains("player")) {

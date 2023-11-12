@@ -21,7 +21,6 @@ package net.draycia.carbon.common.channels;
 
 import cloud.commandframework.Command;
 import cloud.commandframework.CommandManager;
-import cloud.commandframework.arguments.standard.StringArgument;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
@@ -72,6 +71,8 @@ import org.spongepowered.configurate.ConfigurateException;
 import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.loader.ConfigurationLoader;
 import org.spongepowered.configurate.transformation.ConfigurationTransformation;
+
+import static cloud.commandframework.arguments.standard.StringParser.greedyStringParser;
 
 @Singleton
 @DefaultQualifier(NonNull.class)
@@ -352,7 +353,7 @@ public class CarbonChannelRegistry extends ChatListenerInternal implements Chann
 
         Command.Builder<Commander> builder = commandManager.commandBuilder(channel.commandName(),
                 channel.commandAliases(), commandManager.createDefaultCommandMeta())
-            .argument(StringArgument.<Commander>builder("message").greedy().asOptional().build());
+            .optional("message", greedyStringParser());
 
         if (channel.permission() != null) {
             builder = builder.permission(channel.permission());

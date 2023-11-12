@@ -19,10 +19,10 @@
  */
 package net.draycia.carbon.common.command.commands;
 
-import cloud.commandframework.CommandHelpHandler;
 import cloud.commandframework.CommandManager;
-import cloud.commandframework.arguments.standard.StringArgument;
+import cloud.commandframework.arguments.suggestion.Suggestion;
 import cloud.commandframework.context.CommandContext;
+import cloud.commandframework.help.result.CommandEntry;
 import cloud.commandframework.minecraft.extras.AudienceProvider;
 import cloud.commandframework.minecraft.extras.MinecraftHelp;
 import cloud.commandframework.minecraft.extras.RichDescription;
@@ -40,6 +40,7 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.framework.qual.DefaultQualifier;
 
+import static cloud.commandframework.arguments.standard.StringParser.greedyStringParser;
 import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.format.NamedTextColor.DARK_GRAY;
 import static net.kyori.adventure.text.format.NamedTextColor.GRAY;
@@ -77,11 +78,8 @@ public final class HelpCommand extends CarbonCommand {
     @Override
     public void init() {
         final var command = this.commandManager.commandBuilder(this.commandSettings().name(), this.commandSettings().aliases())
-            .literal("help",
-                RichDescription.of(this.carbonMessages.commandHelpDescription()))
-            .argument(StringArgument.<Commander>builder("query")
-                    .greedy().withSuggestionsProvider(this::suggestQueries).asOptional(),
-                RichDescription.of(this.carbonMessages.commandHelpArgumentQuery()))
+            .literal("help", RichDescription.of(this.carbonMessages.commandHelpDescription()))
+            .optional("query", greedyStringParser(), RichDescription.of(this.carbonMessages.commandHelpArgumentQuery()), this::suggestQueries)
             .permission("carbon.help")
             .handler(this::execute)
             .build();
@@ -93,9 +91,9 @@ public final class HelpCommand extends CarbonCommand {
         this.minecraftHelp.queryCommands(ctx.getOrDefault("query", ""), ctx.getSender());
     }
 
-    private List<String> suggestQueries(final CommandContext<Commander> ctx, final String input) {
-        final var topic = this.commandManager.createCommandHelpHandler().queryRootIndex(ctx.getSender());
-        return topic.getEntries().stream().map(CommandHelpHandler.VerboseHelpEntry::getSyntaxString).toList();
+    private List<Suggestion> suggestQueries(final CommandContext<Commander> ctx, final String input) {
+        final var result = this.commandManager.createHelpHandler().queryRootIndex(ctx.getSender());
+        return result.entries().stream().map(CommandEntry::syntax).map(Suggestion::simple).toList();
     }
 
     private static MinecraftHelp<Commander> createHelp(
@@ -123,10 +121,10 @@ public final class HelpCommand extends CarbonCommand {
             final TagResolver.Builder tagResolver = TagResolver.builder();
 
             // Total hack but works for now
-            if (args.length == 2) {
+            if (args.size() == 2) {
                 tagResolver
-                    .tag("page", Tag.selfClosingInserting(text(args[0])))
-                    .tag("max_pages", Tag.selfClosingInserting(text(args[1]))
+                    .tag("page", Tag.selfClosingInserting(text(args.get("page"))))
+                    .tag("max_pages", Tag.selfClosingInserting(text(args.get("max_pages")))
                 );
             }
 

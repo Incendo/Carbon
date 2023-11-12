@@ -20,8 +20,7 @@
 package net.draycia.carbon.common.command.commands;
 
 import cloud.commandframework.CommandManager;
-import cloud.commandframework.arguments.standard.StringArgument;
-import cloud.commandframework.minecraft.extras.MinecraftExtrasMetaKeys;
+import cloud.commandframework.arguments.suggestion.Suggestion;
 import cloud.commandframework.minecraft.extras.RichDescription;
 import com.google.inject.Inject;
 import net.draycia.carbon.api.channels.ChannelPermissionResult;
@@ -37,6 +36,9 @@ import net.kyori.adventure.key.Key;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.framework.qual.DefaultQualifier;
+
+import static cloud.commandframework.CommandDescription.commandDescription;
+import static cloud.commandframework.arguments.standard.StringParser.greedyStringParser;
 
 @DefaultQualifier(NonNull.class)
 public final class LeaveCommand extends CarbonCommand {
@@ -69,19 +71,20 @@ public final class LeaveCommand extends CarbonCommand {
     @Override
     public void init() {
         final var command = this.commandManager.commandBuilder(this.commandSettings().name(), this.commandSettings().aliases())
-            .argument(StringArgument.<Commander>builder("channel").greedy().withSuggestionsProvider((context, s) -> {
+            .required("channel", greedyStringParser(), RichDescription.of(this.carbonMessages.commandLeaveDescription()), (context, s) -> {
                 final CarbonPlayer sender = ((PlayerCommander) context.getSender()).carbonPlayer();
                 return this.channelRegistry.keys().stream()
                     .map(this.channelRegistry::channel)
                     .filter(x -> !sender.leftChannels().contains(x.key()) && x.speechPermitted(sender).permitted())
                     .map(x -> x.key().value())
+                    .map(Suggestion::simple)
                     .toList();
-            }), RichDescription.of(this.carbonMessages.commandLeaveDescription()))
+            })
             .permission("carbon.join")
             .senderType(PlayerCommander.class)
-            .meta(MinecraftExtrasMetaKeys.DESCRIPTION, this.carbonMessages.commandLeaveDescription())
+            .commandDescription(commandDescription(RichDescription.of(this.carbonMessages.commandLeaveDescription())))
             .handler(handler -> {
-                final CarbonPlayer sender = ((PlayerCommander) handler.getSender()).carbonPlayer();
+                final CarbonPlayer sender = handler.getSender().carbonPlayer();
                 final @Nullable ChatChannel channel = this.channelRegistry.channelByValue(handler.get("channel"));
                 if (channel == null) {
                     this.carbonMessages.channelNotFound(sender);

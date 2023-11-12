@@ -19,6 +19,7 @@
  */
 package net.draycia.carbon.common.users;
 
+import cloud.commandframework.arguments.suggestion.Suggestion;
 import cloud.commandframework.context.CommandContext;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -97,13 +98,14 @@ public final class NetworkUsers implements PlayerSuggestions {
 
     // PlayerSuggestions impl
     @Override
-    public List<String> apply(final CommandContext<Commander> ctx, final String input) {
+    public List<Suggestion> suggestions(final CommandContext<Commander> ctx, final String input) {
         final Commander commander = ctx.getSender();
 
         final List<? extends CarbonPlayer> local = this.server.players();
 
         if (!(commander instanceof PlayerCommander player)) {
             return Stream.concat(local.stream().map(CarbonPlayer::username), this.map.values().stream().flatMap(m -> m.values().stream()))
+                .map(Suggestion::simple)
                 .distinct()
                 .toList();
         }
@@ -128,6 +130,7 @@ public final class NetworkUsers implements PlayerSuggestions {
         return Stream.concat(local.stream(), remote)
             .filter(carbonPlayer::awareOf)
             .map(CarbonPlayer::username)
+            .map(Suggestion::simple)
             .distinct()
             .toList();
     }

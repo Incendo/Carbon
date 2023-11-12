@@ -2,6 +2,7 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 dependencyResolutionManagement {
   repositories {
+    mavenLocal()
     mavenCentral()
     maven("https://repo.jpenilla.xyz/snapshots/") {
       mavenContent {

@@ -20,8 +20,6 @@
 package net.draycia.carbon.common.command.commands;
 
 import cloud.commandframework.CommandManager;
-import cloud.commandframework.arguments.standard.StringArgument;
-import cloud.commandframework.minecraft.extras.MinecraftExtrasMetaKeys;
 import cloud.commandframework.minecraft.extras.RichDescription;
 import com.google.inject.Inject;
 import java.util.UUID;
@@ -37,6 +35,9 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.framework.qual.DefaultQualifier;
+
+import static cloud.commandframework.CommandDescription.commandDescription;
+import static cloud.commandframework.arguments.standard.StringParser.greedyStringParser;
 
 @DefaultQualifier(NonNull.class)
 public final class ReplyCommand extends CarbonCommand {
@@ -72,13 +73,12 @@ public final class ReplyCommand extends CarbonCommand {
     @Override
     public void init() {
         final var command = this.commandManager.commandBuilder(this.commandSettings().name(), this.commandSettings().aliases())
-            .argument(StringArgument.greedy("message"),
-                RichDescription.of(this.messages.commandReplyArgumentMessage()))
+            .required("message", greedyStringParser(), RichDescription.of(this.messages.commandReplyArgumentMessage()))
             .permission("carbon.whisper.reply")
             .senderType(PlayerCommander.class)
-            .meta(MinecraftExtrasMetaKeys.DESCRIPTION, this.messages.commandReplyDescription())
+            .commandDescription(commandDescription(RichDescription.of(this.messages.commandReplyDescription())))
             .handler(ctx -> {
-                final CarbonPlayer sender = ((PlayerCommander) ctx.getSender()).carbonPlayer();
+                final CarbonPlayer sender = ctx.getSender().carbonPlayer();
 
                 if (sender.muted()) {
                     this.messages.muteCannotSpeak(sender);

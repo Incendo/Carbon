@@ -20,7 +20,7 @@
 package net.draycia.carbon.common.command.commands;
 
 import cloud.commandframework.CommandManager;
-import cloud.commandframework.minecraft.extras.MinecraftExtrasMetaKeys;
+import cloud.commandframework.minecraft.extras.RichDescription;
 import com.google.inject.Inject;
 import net.draycia.carbon.api.CarbonServer;
 import net.draycia.carbon.common.command.CarbonCommand;
@@ -33,6 +33,8 @@ import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.framework.qual.DefaultQualifier;
+
+import static cloud.commandframework.CommandDescription.commandDescription;
 
 @DefaultQualifier(NonNull.class)
 public final class ClearChatCommand extends CarbonCommand {
@@ -70,7 +72,7 @@ public final class ClearChatCommand extends CarbonCommand {
         final var command = this.commandManager.commandBuilder(this.commandSettings().name(), this.commandSettings().aliases())
             .permission("carbon.clearchat.clear")
             .senderType(PlayerCommander.class)
-            .meta(MinecraftExtrasMetaKeys.DESCRIPTION, this.carbonMessages.commandClearChatDescription())
+            .commandDescription(commandDescription(RichDescription.of(this.carbonMessages.commandClearChatDescription())))
             .handler(handler -> {
                 // Not fond of having to send 50 messages to each player
                 // Are we not able to just paste in 50 newlines and call it a day?
@@ -82,16 +84,8 @@ public final class ClearChatCommand extends CarbonCommand {
                     }
                 }
 
-                final Component senderName;
-                final String username;
-
-                if (handler.getSender() instanceof PlayerCommander player) {
-                    senderName = player.carbonPlayer().displayName();
-                    username = player.carbonPlayer().username();
-                } else {
-                    senderName = Component.text("Console");
-                    username = "Console";
-                }
+                final Component senderName = handler.getSender().carbonPlayer().displayName();
+                final String username = handler.getSender().carbonPlayer().username();
 
                 this.server.sendMessage(this.configManager.primaryConfig().clearChatSettings()
                     .broadcast(senderName, username));

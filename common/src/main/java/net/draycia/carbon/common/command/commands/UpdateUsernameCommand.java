@@ -20,8 +20,6 @@
 package net.draycia.carbon.common.command.commands;
 
 import cloud.commandframework.CommandManager;
-import cloud.commandframework.arguments.standard.UUIDArgument;
-import cloud.commandframework.minecraft.extras.MinecraftExtrasMetaKeys;
 import cloud.commandframework.minecraft.extras.RichDescription;
 import com.google.inject.Inject;
 import java.util.Objects;
@@ -39,6 +37,9 @@ import net.draycia.carbon.common.users.WrappedCarbonPlayer;
 import net.kyori.adventure.key.Key;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.framework.qual.DefaultQualifier;
+
+import static cloud.commandframework.CommandDescription.commandDescription;
+import static cloud.commandframework.arguments.standard.UUIDParser.uuidParser;
 
 @DefaultQualifier(NonNull.class)
 public final class UpdateUsernameCommand extends CarbonCommand {
@@ -77,16 +78,16 @@ public final class UpdateUsernameCommand extends CarbonCommand {
     @Override
     public void init() {
         final var command = this.commandManager.commandBuilder(this.commandSettings().name(), this.commandSettings().aliases())
-            .argument(this.argumentFactory.carbonPlayer("player").asOptional(),
+            .optional("player", this.argumentFactory.carbonPlayer(),
                 RichDescription.of(this.messageService.commandUpdateUsernameArgumentPlayer()))
             .flag(this.commandManager.flagBuilder("uuid")
                 .withAliases("u")
                 .withDescription(RichDescription.of(this.messageService.commandUpdateUsernameArgumentUUID()))
-                .withArgument(UUIDArgument.optional("uuid"))
+                .withComponent(uuidParser())
             )
             .permission("carbon.updateusername")
             .senderType(Commander.class)
-            .meta(MinecraftExtrasMetaKeys.DESCRIPTION, this.messageService.commandUpdateUsernameDescription())
+            .commandDescription(commandDescription(RichDescription.of(this.messageService.commandUpdateUsernameDescription())))
             .handler(handler -> {
                 final CarbonPlayer sender = ((PlayerCommander) handler.getSender()).carbonPlayer();
                 CarbonPlayer target;
